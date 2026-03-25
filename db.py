@@ -75,3 +75,50 @@ def delete_task(task_id: int):
     con.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
     con.commit()
     con.close()
+
+def init_db():
+    con = sqlite3.connect(DB_PATH)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS tasks (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            title     TEXT NOT NULL,
+            detail    TEXT,
+            urgency   INTEGER DEFAULT 3,
+            urgency_reason TEXT,
+            size      TEXT,
+            deadline  TEXT,
+            category  TEXT,
+            subtasks  TEXT,
+            done      INTEGER DEFAULT 0,
+            created   TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    # new — cache table
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS cache (
+            key   TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            saved TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    con.commit()
+    con.close()
+
+
+def cache_set(key: str, value: str):
+    con = sqlite3.connect(DB_PATH)
+    con.execute(
+        "INSERT OR REPLACE INTO cache (key, value, saved) VALUES (?, ?, datetime('now'))",
+        (key, value)
+    )
+    con.commit()
+    con.close()
+
+
+def cache_get(key: str) -> str | None:
+    con = sqlite3.connect(DB_PATH)
+    row = con.execute(
+        "SELECT value FROM cache WHERE key = ?", (key,)
+    ).fetchone()
+    con.close()
+    return row[0] if row else None

@@ -6,116 +6,148 @@
 <title>Study Planner</title>
 <style>
   :root {
-    --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8;
-    --text: #1a1a18; --muted: #6b6a65; --accent: #534AB7;
-    --u5: #A32D2D; --u5bg: #FCEBEB;
-    --u4: #854F0B; --u4bg: #FAEEDA;
-    --u3: #3B6D11; --u3bg: #EAF3DE;
-    --u2: #185FA5; --u2bg: #E6F1FB;
-    --u1: #5F5E5A; --u1bg: #F1EFE8;
+    --bg:#f5f4f0;--surface:#fff;--border:#e2e0d8;
+    --text:#1a1a18;--muted:#6b6a65;--accent:#534AB7;
+    --u5:#A32D2D;--u5bg:#FCEBEB;--u5b:#F09595;
+    --u4:#854F0B;--u4bg:#FAEEDA;--u4b:#EF9F27;
+    --u3:#3B6D11;--u3bg:#EAF3DE;--u3b:#97C459;
+    --u2:#185FA5;--u2bg:#E6F1FB;--u2b:#85B7EB;
+    --u1:#5F5E5A;--u1bg:#F1EFE8;--u1b:#B4B2A9;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1a1a18; --surface: #242420; --border: #3a3a36;
-      --text: #e8e6df; --muted: #9a9892; --accent: #8b84e0;
-    }
+  @media(prefers-color-scheme:dark){
+    :root{--bg:#1a1a18;--surface:#242420;--border:#3a3a36;--text:#e8e6df;--muted:#9a9892;--accent:#8b84e0;}
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;height:100vh;overflow:hidden}
 
-  header { padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 12px; }
-  header h1 { font-size: 17px; font-weight: 500; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; }
-  .status-dot.on { background: #3B6D11; }
+  header{padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;height:48px}
+  header h1{font-size:16px;font-weight:500}
+  .dot{width:8px;height:8px;border-radius:50%;background:#ccc}
+  .dot.on{background:#3B6D11}
+  .hbadge{font-size:12px;color:var(--muted);margin-left:auto}
 
-  .layout { display: flex; height: calc(100vh - 50px); }
+  .layout{display:flex;height:calc(100vh - 48px)}
 
-  /* sidebar */
-  .sidebar { width: 320px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); flex-shrink: 0; }
-  .sidebar-header { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 500; color: var(--muted); }
-  .task-list { overflow-y: auto; flex: 1; padding: 8px; }
-  .task-item { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; transition: background .15s; }
-  .task-item:hover { background: var(--bg); }
-  .task-item.selected { border-color: var(--accent); background: var(--bg); }
-  .task-item.done { opacity: 0.45; }
-  .task-title { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
-  .task-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-  .pill { font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 500; }
+  /* ── sidebar ── */
+  .sidebar{width:280px;border-right:1px solid var(--border);display:flex;flex-direction:column;background:var(--surface);flex-shrink:0}
+  .filter-row{padding:8px;display:flex;gap:5px;border-bottom:1px solid var(--border)}
+  .fbtn{padding:4px 10px;border-radius:20px;font-size:12px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer}
+  .fbtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .sidebar-label{padding:8px 12px 4px;font-size:12px;font-weight:500;color:var(--muted)}
+  .task-list{overflow-y:auto;flex:1;padding:6px}
+  .ti{padding:9px 11px;border-radius:8px;border:1px solid var(--border);margin-bottom:5px;cursor:pointer;transition:background .12s}
+  .ti:hover{background:var(--bg)}
+  .ti.sel{border-color:var(--accent);background:var(--bg)}
+  .ti.done{opacity:.4}
+  .ti-title{font-size:13px;font-weight:500;margin-bottom:4px}
+  .ti-meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .pill{font-size:11px;padding:2px 7px;border-radius:20px;font-weight:500}
 
-  /* main panel */
-  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .input-area { padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .input-area textarea { width: 100%; height: 90px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; line-height: 1.6; background: var(--bg); color: var(--text); resize: none; outline: none; font-family: inherit; }
-  .input-area textarea:focus { border-color: var(--accent); }
-  .input-row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
-  .btn { padding: 8px 16px; border-radius: 7px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: default; }
-  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
-  .btn-ghost:hover { background: var(--bg); }
+  /* ── main ── */
+  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 
-  .detail-area { flex: 1; overflow-y: auto; padding: 20px; }
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 14px; }
+  .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);padding:0 16px}
+  .tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
 
-  .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; max-width: 600px; }
-  .detail-card h2 { font-size: 18px; font-weight: 500; margin-bottom: 10px; }
-  .detail-reason { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
-  .subtask-list { list-style: none; padding: 0; }
-  .subtask-list li { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; align-items: center; gap: 10px; }
-  .subtask-list li:last-child { border-bottom: none; }
-  .subtask-check { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); cursor: pointer; flex-shrink: 0; }
-  .detail-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .tab-panel{display:none;flex:1;flex-direction:column;overflow:hidden}
+  .tab-panel.active{display:flex}
 
-  .summary-bar { padding: 12px 20px; background: var(--u2bg); border-bottom: 1px solid #85B7EB; font-size: 13px; color: var(--u2); line-height: 1.5; }
-  .spinner { display: inline-block; animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  /* dump tab */
+  .input-area{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--surface)}
+  .input-area textarea{width:100%;height:80px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg);color:var(--text);resize:none;outline:none;font-family:inherit}
+  .input-area textarea:focus{border-color:var(--accent)}
+  .input-row{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .btn{padding:7px 15px;border-radius:7px;border:none;font-size:13px;font-weight:500;cursor:pointer}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:disabled{background:var(--border);color:var(--muted);cursor:default}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+  .btn-ghost:hover{background:var(--bg)}
+  .btn-danger{background:transparent;border:1px solid var(--border);color:var(--u5)}
 
-  .gcal-panel { padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface); }
-  .gcal-events { font-size: 12px; color: var(--muted); margin-top: 8px; }
-  .gcal-event { padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .summary-bar{padding:10px 18px;background:var(--u2bg);border-bottom:1px solid var(--u2b);font-size:13px;color:var(--u2);line-height:1.5;display:none}
+  .detail-area{flex:1;overflow-y:auto;padding:18px}
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
+  .detail-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;max-width:560px}
+  .detail-card h2{font-size:17px;font-weight:500;margin-bottom:8px}
+  .detail-reason{font-size:12px;color:var(--muted);margin-bottom:12px}
+  .sub-list{list-style:none;padding:0}
+  .sub-list li{padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;align-items:center;gap:8px}
+  .sub-list li:last-child{border-bottom:none}
+  .sub-check{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0}
+  .detail-actions{margin-top:14px;display:flex;gap:7px;flex-wrap:wrap}
 
-  .filter-row { padding: 8px 8px 4px; display: flex; gap: 6px; }
-  .filter-btn { padding: 4px 10px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
-  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  /* agenda tab */
+  .agenda-area{flex:1;overflow-y:auto;padding:16px 18px}
+  .agenda-refresh{display:flex;justify-content:flex-end;margin-bottom:12px}
+  .day-block{margin-bottom:20px}
+  .day-header{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .day-header.today span.dname{color:var(--accent)}
+  .day-today-badge{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--accent);color:#fff}
+  .agenda-items{display:flex;flex-direction:column;gap:6px}
+  .agenda-event{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:13px;display:flex;align-items:center;gap:8px}
+  .agenda-event .ev-dot{width:8px;height:8px;border-radius:50%;background:#378ADD;flex-shrink:0}
+  .agenda-event .ev-time{font-size:11px;color:var(--muted);min-width:52px}
+  .agenda-task{padding:8px 12px;border-radius:8px;border-left:3px solid;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface);border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .agenda-task:hover{background:var(--bg)}
+  .agenda-task .at-title{font-weight:500;flex:1}
+  .day-empty{font-size:12px;color:var(--muted);padding:4px 0}
+
+  .spinner{display:inline-block;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
 <header>
-  <div id="ollama-dot" class="status-dot" title="Ollama status"></div>
+  <div id="ollama-dot" class="dot" title="Ollama status"></div>
   <h1>Study Planner</h1>
-  <span id="gcal-badge" style="font-size:12px;color:var(--muted);margin-left:auto;display:none">📅 GCal connected</span>
+  <span id="gcal-badge" class="hbadge" style="display:none">📅 Google Calendar connected</span>
 </header>
 
 <div class="layout">
-  <!-- Sidebar: task list -->
+  <!-- sidebar -->
   <aside class="sidebar">
     <div class="filter-row">
-      <button class="filter-btn active" onclick="setFilter('open')">Open</button>
-      <button class="filter-btn" onclick="setFilter('all')">All</button>
-      <button class="filter-btn" onclick="setFilter('done')">Done</button>
+      <button class="fbtn active" onclick="setFilter('open')">Open</button>
+      <button class="fbtn" onclick="setFilter('all')">All</button>
+      <button class="fbtn" onclick="setFilter('done')">Done</button>
     </div>
-    <div class="sidebar-header" id="task-count">No tasks yet</div>
+    <div class="sidebar-label" id="task-count">No tasks yet</div>
     <div class="task-list" id="task-list"></div>
   </aside>
 
-  <!-- Main -->
+  <!-- main -->
   <main class="main">
-    <div class="input-area">
-      <textarea id="dump-input" placeholder="Brain dump your day... e.g. 'got a stats midterm Friday, haven't started, also lab report due tomorrow...'"></textarea>
-      <div class="input-row">
-        <button class="btn btn-primary" id="extract-btn" onclick="extractTasks()">Extract tasks</button>
-        <button class="btn btn-ghost" onclick="loadTasks()">Refresh list</button>
-        <span id="extract-status" style="font-size:13px;color:var(--muted)"></span>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('dump')">Brain dump</div>
+      <div class="tab" onclick="switchTab('agenda')">Agenda</div>
+    </div>
+
+    <!-- dump tab -->
+    <div class="tab-panel active" id="tab-dump">
+      <div class="input-area">
+        <textarea id="dump-input" placeholder="Talk through your day... e.g. 'stats midterm friday, haven't started, lab report due wednesday...'"></textarea>
+        <div class="input-row">
+          <button class="btn btn-primary" id="extract-btn" onclick="extractTasks()">Extract tasks</button>
+          <button class="btn btn-ghost" onclick="loadTasks()">Refresh</button>
+          <span id="extract-status" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="summary-bar" id="summary-bar"></div>
+      <div class="detail-area" id="detail-area">
+        <div class="empty">Type a brain dump and hit <strong>Extract tasks</strong><br>
+        <span style="font-size:12px">or click a task on the left</span></div>
       </div>
     </div>
 
-    <div id="summary-bar" style="display:none" class="summary-bar"></div>
-
-    <div class="detail-area" id="detail-area">
-      <div class="empty-state">
-        <p>Type a brain dump above and hit <strong>Extract tasks</strong></p>
-        <p style="margin-top:8px;font-size:13px">or click a task on the left to see details</p>
+    <!-- agenda tab -->
+    <div class="tab-panel" id="tab-agenda">
+      <div class="agenda-area" id="agenda-area">
+        <div class="agenda-refresh">
+          <button class="btn btn-ghost" onclick="loadAgenda()">↻ Refresh</button>
+        </div>
+        <div id="agenda-content"><div class="empty">Loading agenda...</div></div>
       </div>
     </div>
   </main>
@@ -123,179 +155,209 @@
 
 <script>
 const U = {
-  5: { label: "Critical", color: "var(--u5)", bg: "var(--u5bg)" },
-  4: { label: "High",     color: "var(--u4)", bg: "var(--u4bg)" },
-  3: { label: "Medium",   color: "var(--u3)", bg: "var(--u3bg)" },
-  2: { label: "Low",      color: "var(--u2)", bg: "var(--u2bg)" },
-  1: { label: "Someday",  color: "var(--u1)", bg: "var(--u1bg)" },
+  5:{label:"Critical",color:"var(--u5)",bg:"var(--u5bg)",border:"var(--u5b)"},
+  4:{label:"High",    color:"var(--u4)",bg:"var(--u4bg)",border:"var(--u4b)"},
+  3:{label:"Medium",  color:"var(--u3)",bg:"var(--u3bg)",border:"var(--u3b)"},
+  2:{label:"Low",     color:"var(--u2)",bg:"var(--u2bg)",border:"var(--u2b)"},
+  1:{label:"Someday", color:"var(--u1)",bg:"var(--u1bg)",border:"var(--u1b)"},
 };
 
-let allTasks = [], currentFilter = "open", selectedId = null;
+let allTasks=[], currentFilter="open", selectedId=null;
 
-// ── init ────────────────────────────────────────────────────────────
-async function init() {
-  // check ollama
-  try {
-    const r = await fetch("http://localhost:11434/api/tags");
-    if (r.ok) document.getElementById("ollama-dot").classList.add("on");
-  } catch {}
-
-  // check gcal
-  try {
-    const r = await fetch("/api/gcal/status");
-    const d = await r.json();
-    if (d.available) document.getElementById("gcal-badge").style.display = "inline";
-  } catch {}
-
-  loadTasks();
+// ── init ─────────────────────────────────────────────────────────────
+async function init(){
+  try{
+    const r=await fetch("http://localhost:11434/api/tags");
+    if(r.ok) document.getElementById("ollama-dot").classList.add("on");
+  }catch{}
+  try{
+    const r=await fetch("/api/gcal/status");
+    const d=await r.json();
+    if(d.available) document.getElementById("gcal-badge").style.display="inline";
+  }catch{}
+  await loadTasks();
+  loadAgenda();
 }
 
-// ── load tasks ──────────────────────────────────────────────────────
-async function loadTasks() {
-  const r = await fetch("/api/tasks?include_done=true");
-  allTasks = await r.json();
+// ── tabs ─────────────────────────────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("active",["dump","agenda"][i]===name));
+  document.querySelectorAll(".tab-panel").forEach((p,i)=>p.classList.toggle("active",["tab-dump","tab-agenda"][i]==="tab-"+name));
+  if(name==="agenda") loadAgenda();
+}
+
+// ── tasks ─────────────────────────────────────────────────────────────
+async function loadTasks(){
+  const r=await fetch("/api/tasks?include_done=true");
+  allTasks=await r.json();
   renderList();
 }
 
-function setFilter(f) {
-  currentFilter = f;
-  document.querySelectorAll(".filter-btn").forEach(b => b.classList.toggle("active", b.textContent.toLowerCase() === f));
+function setFilter(f){
+  currentFilter=f;
+  document.querySelectorAll(".fbtn").forEach(b=>b.classList.toggle("active",b.textContent.toLowerCase()===f));
   renderList();
 }
 
-function renderList() {
-  const filtered = allTasks.filter(t => {
-    if (currentFilter === "open") return !t.done;
-    if (currentFilter === "done") return t.done;
+function renderList(){
+  const filtered=allTasks.filter(t=>{
+    if(currentFilter==="open") return !t.done;
+    if(currentFilter==="done") return t.done;
     return true;
   });
-
-  document.getElementById("task-count").textContent =
-    filtered.length ? `${filtered.length} task${filtered.length > 1 ? "s" : ""}` : "No tasks";
-
-  const el = document.getElementById("task-list");
-  el.innerHTML = filtered.map(t => {
-    const u = U[t.urgency] || U[3];
-    return `
-      <div class="task-item ${t.done ? "done" : ""} ${t.id === selectedId ? "selected" : ""}"
-           onclick="selectTask(${t.id})">
-        <div class="task-title">${esc(t.title)}</div>
-        <div class="task-meta">
-          <span class="pill" style="background:${u.bg};color:${u.color}">${u.label}</span>
-          <span class="pill" style="background:var(--border);color:var(--muted)">${t.category || ""}</span>
-          ${t.deadline ? `<span style="font-size:11px;color:var(--muted)">📅 ${t.deadline}</span>` : ""}
-        </div>
-      </div>`;
+  document.getElementById("task-count").textContent=filtered.length?`${filtered.length} task${filtered.length!==1?"s":""}` :"No tasks";
+  document.getElementById("task-list").innerHTML=filtered.map(t=>{
+    const u=U[t.urgency]||U[3];
+    return `<div class="ti${t.done?" done":""}${t.id===selectedId?" sel":""}" onclick="selectTask(${t.id})">
+      <div class="ti-title">${esc(t.title)}</div>
+      <div class="ti-meta">
+        <span class="pill" style="background:${u.bg};color:${u.color}">${u.label}</span>
+        <span class="pill" style="background:var(--border);color:var(--muted)">${t.category||""}</span>
+        ${t.deadline?`<span style="font-size:11px;color:var(--muted)">📅 ${esc(t.deadline)}</span>`:""}
+      </div>
+    </div>`;
   }).join("");
 }
 
-// ── extract ─────────────────────────────────────────────────────────
-async function extractTasks() {
-  const text = document.getElementById("dump-input").value.trim();
-  if (!text) return;
-
-  const btn = document.getElementById("extract-btn");
-  const status = document.getElementById("extract-status");
-  btn.disabled = true;
-  status.innerHTML = '<span class="spinner">⟳</span> Asking Ollama...';
-
-  try {
-    const r = await fetch("/api/extract", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, use_gcal: true })
-    });
-    if (!r.ok) throw new Error(await r.text());
-    const d = await r.json();
-
-    const bar = document.getElementById("summary-bar");
-    bar.textContent = d.summary;
-    bar.style.display = "block";
-
+// ── extract ───────────────────────────────────────────────────────────
+async function extractTasks(){
+  const text=document.getElementById("dump-input").value.trim();
+  if(!text) return;
+  const btn=document.getElementById("extract-btn");
+  const status=document.getElementById("extract-status");
+  btn.disabled=true;
+  status.innerHTML='<span class="spinner">⟳</span> Thinking...';
+  try{
+    const r=await fetch("/api/extract",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,use_gcal:true})});
+    if(!r.ok) throw new Error(await r.text());
+    const d=await r.json();
+    const bar=document.getElementById("summary-bar");
+    bar.textContent=d.summary; bar.style.display="block";
     await loadTasks();
-    status.textContent = `✓ ${d.tasks.length} tasks added`;
-    document.getElementById("dump-input").value = "";
-
-    // select first new task
-    if (d.tasks.length) selectTask(d.tasks[0].id);
-  } catch (e) {
-    status.textContent = "Error: " + e.message;
-  }
-  btn.disabled = false;
+    loadAgenda();
+    status.textContent=`✓ ${d.tasks.length} tasks added`;
+    document.getElementById("dump-input").value="";
+    if(d.tasks.length) selectTask(d.tasks[0].id);
+  }catch(e){ status.textContent="Error: "+e.message; }
+  btn.disabled=false;
 }
 
-// ── select / detail ─────────────────────────────────────────────────
-function selectTask(id) {
-  selectedId = id;
-  renderList();
-  const t = allTasks.find(x => x.id === id);
-  if (!t) return;
-  const u = U[t.urgency] || U[3];
-
-  const subtaskHtml = (t.subtasks || []).map(s =>
-    `<li><span class="subtask-check" title="Mark done"></span>${esc(s)}</li>`
-  ).join("");
-
-  document.getElementById("detail-area").innerHTML = `
+// ── select task ───────────────────────────────────────────────────────
+function selectTask(id){
+  selectedId=id; renderList();
+  const t=allTasks.find(x=>x.id===id);
+  if(!t) return;
+  const u=U[t.urgency]||U[3];
+  // switch to dump tab to show detail
+  switchTab("dump");
+  document.getElementById("detail-area").innerHTML=`
     <div class="detail-card">
-      <div class="task-meta" style="margin-bottom:10px">
+      <div class="ti-meta" style="margin-bottom:10px">
         <span class="pill" style="background:${u.bg};color:${u.color}">${u.label}</span>
-        <span class="pill" style="background:var(--border);color:var(--muted)">${t.category || ""}</span>
-        <span class="pill" style="background:var(--border);color:var(--muted)">${t.size || ""}</span>
-        ${t.deadline ? `<span style="font-size:12px;color:var(--muted)">Due: ${t.deadline}</span>` : ""}
+        <span class="pill" style="background:var(--border);color:var(--muted)">${t.category||""}</span>
+        <span class="pill" style="background:var(--border);color:var(--muted)">${t.size||""}</span>
+        ${t.deadline?`<span style="font-size:12px;color:var(--muted)">📅 ${esc(t.deadline)}</span>`:""}
       </div>
       <h2>${esc(t.title)}</h2>
-      ${t.detail ? `<p style="font-size:14px;color:var(--muted);margin:8px 0">${esc(t.detail)}</p>` : ""}
-      <div class="detail-reason">Priority reason: ${esc(t.urgency_reason || "")}</div>
-
-      ${subtaskHtml ? `
-        <p style="font-size:13px;font-weight:500;margin-bottom:8px">Subtasks</p>
-        <ul class="subtask-list">${subtaskHtml}</ul>
-      ` : ""}
-
+      ${t.detail?`<p style="font-size:13px;color:var(--muted);margin:6px 0">${esc(t.detail)}</p>`:""}
+      <div class="detail-reason">Priority: ${esc(t.urgency_reason||"")}</div>
+      ${(t.subtasks||[]).length?`
+        <p style="font-size:12px;font-weight:500;margin:10px 0 6px">Subtasks</p>
+        <ul class="sub-list">${(t.subtasks||[]).map(s=>`<li><span class="sub-check"></span>${esc(s)}</li>`).join("")}</ul>`:""}
       <div class="detail-actions">
-        ${!t.done ? `<button class="btn btn-primary" onclick="markDone(${t.id})">Mark done</button>` : ""}
+        ${!t.done?`<button class="btn btn-primary" onclick="markDone(${t.id})">Mark done</button>`:""}
         <button class="btn btn-ghost" onclick="pushToCal(${t.id})">Add to Google Calendar</button>
-        <button class="btn btn-ghost" style="color:#A32D2D" onclick="deleteTask(${t.id})">Delete</button>
+        <button class="btn btn-danger" onclick="deleteTask(${t.id})">Delete</button>
       </div>
     </div>`;
 }
 
-// ── actions ─────────────────────────────────────────────────────────
-async function markDone(id) {
-  await fetch("/api/tasks/done", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ task_id: id })
-  });
-  await loadTasks();
-  document.getElementById("detail-area").innerHTML = `<div class="empty-state">Task marked done ✓</div>`;
-  selectedId = null;
+// ── agenda ────────────────────────────────────────────────────────────
+let agendaCache=null;
+
+async function loadAgenda(){
+  try{
+    const r=await fetch("/api/agenda");
+    agendaCache=await r.json();
+    renderAgenda();
+  }catch(e){
+    document.getElementById("agenda-content").innerHTML=`<div class="empty">Couldn't load agenda — is the server running?</div>`;
+  }
 }
 
-async function deleteTask(id) {
-  if (!confirm("Delete this task?")) return;
-  await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-  await loadTasks();
-  document.getElementById("detail-area").innerHTML = `<div class="empty-state">Task deleted.</div>`;
-  selectedId = null;
+function renderAgenda(){
+  if(!agendaCache) return;
+  const {days, agenda}=agendaCache;
+  const today=new Date().toISOString().split("T")[0];
+
+  const html=days.map(d=>{
+    const isToday=d===today;
+    const date=new Date(d+"T12:00:00");
+    const dname=date.toLocaleDateString("en-CA",{weekday:"long"});
+    const dshort=date.toLocaleDateString("en-CA",{month:"short",day:"numeric"});
+    const slot=agenda[d]||{events:[],tasks:[]};
+    const hasItems=slot.events.length||slot.tasks.length;
+
+    const evHtml=slot.events.map(e=>{
+      const time=e.start.includes("T")?new Date(e.start).toLocaleTimeString("en-CA",{hour:"2-digit",minute:"2-digit",hour12:true}):"All day";
+      return `<div class="agenda-event">
+        <span class="ev-dot"></span>
+        <span class="ev-time">${time}</span>
+        <span>${esc(e.summary)}</span>
+      </div>`;
+    }).join("");
+
+    const taskHtml=slot.tasks.map(t=>{
+      const u=U[t.urgency]||U[3];
+      return `<div class="agenda-task" style="border-left-color:${u.color}" onclick="selectTask(${t.id})">
+        <span class="pill" style="background:${u.bg};color:${u.color};flex-shrink:0">${u.label}</span>
+        <span class="at-title">${esc(t.title)}</span>
+        <span style="font-size:11px;color:var(--muted)">${t.category||""}</span>
+      </div>`;
+    }).join("");
+
+    return `<div class="day-block">
+      <div class="day-header${isToday?" today":""}">
+        <span class="dname">${dname}</span>
+        <span style="color:var(--muted);font-weight:400">${dshort}</span>
+        ${isToday?`<span class="day-today-badge">today</span>`:""}
+      </div>
+      <div class="agenda-items">
+        ${evHtml}${taskHtml}
+        ${!hasItems?`<div class="day-empty">Nothing scheduled</div>`:""}
+      </div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("agenda-content").innerHTML=html;
 }
 
-async function pushToCal(id) {
-  const date = prompt("Push to calendar — enter date (YYYY-MM-DD):");
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
-  const r = await fetch("/api/gcal/push", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ task_id: id, date })
-  });
-  const d = await r.json();
-  alert(d.ok ? "Added to Google Calendar!" : "GCal not set up yet — see gcal.py setup instructions.");
+// ── actions ───────────────────────────────────────────────────────────
+async function markDone(id){
+  await fetch("/api/tasks/done",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_id:id})});
+  await loadTasks(); loadAgenda();
+  document.getElementById("detail-area").innerHTML=`<div class="empty">Task marked done ✓</div>`;
+  selectedId=null;
 }
 
-function esc(s) {
-  return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+async function deleteTask(id){
+  if(!confirm("Delete this task?")) return;
+  await fetch(`/api/tasks/${id}`,{method:"DELETE"});
+  await loadTasks(); loadAgenda();
+  document.getElementById("detail-area").innerHTML=`<div class="empty">Task deleted.</div>`;
+  selectedId=null;
 }
+
+async function pushToCal(id){
+  const date=prompt("Push to calendar — enter date (YYYY-MM-DD):");
+  if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+  const r=await fetch("/api/gcal/push",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({task_id:id,date})});
+  const d=await r.json();
+  alert(d.ok?"Added to Google Calendar!":"GCal not configured — check gcal.py setup.");
+  if(d.ok) loadAgenda();
+}
+
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") }
 
 init();
 </script>

@@ -1,5 +1,20 @@
+# Ignore error logs/console logs
 *.log
+
+# Please don't leak my API key and blow my credit card up.
 .env
 .vscode/
+
+# I don't even think I have these
 node_modules/
 dist/
+
+# token.json should be generated accordingly when using the program itself
+# The only file you need to add is credentials.json which is your own Google Calendar API key
+# You can find that by going to cloud.google.com and creating and project and activating your API
+# I am working on making this a publicly accessible app that is hosted by one end
+*.json
+__pycache__/
+
+*.pyc
+*.db

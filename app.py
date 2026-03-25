@@ -83,6 +83,28 @@ def push_to_cal(req: PushCalRequest):
     ok = gcal.create_event(task["title"], req.date, task.get("detail", ""))
     return {"ok": ok}
 
+@app.get("/api/agenda")
+def agenda():
+    from datetime import datetime, timedelta
+
+    today = datetime.now().date()
+    days = [(today + timedelta(days=i)).isoformat() for i in range(7)]
+    agenda = {d: {"events": [], "tasks": []} for d in days}
+
+    for e in gcal.get_upcoming_events(days_ahead=7):
+        date_str = e["start"][:10]
+        if date_str in agenda:
+            agenda[date_str]["events"].append(e)
+
+    for t in db.get_tasks(include_done=False):
+        if not t.get("deadline"):
+            continue
+        resolved = gcal.resolve_deadline(t["deadline"], today)
+        if resolved and resolved.isoformat() in agenda:
+            agenda[resolved.isoformat()]["tasks"].append(t)
+
+    return {"days": days, "agenda": agenda}
+
 
 # ── run ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
