@@ -7,41 +7,60 @@ CREDS_FILE = Path(__file__).parent / "credentials.json"
 TOKEN_FILE  = Path(__file__).parent / "token.json"
 SCOPES      = ["https://www.googleapis.com/auth/calendar"]
 
-# ── class detection patterns ─────────────────────────────────────────
+# ── class detection ──────────────────────────────────────────────────
 
-# matches: CSC108, MAT137H1, PHYA21, BIO 120, etc.
-COURSE_CODE_RE = re.compile(r'\b[A-Z]{2,4}\s?\d{2,4}[A-Z0-9]*\b')
+def _get_course_labels() -> list[str]:
+    """
+    Pull user-defined course labels from the DB.
+    Cached loosely — low frequency reads so no perf concern.
+    """
+    try:
+        import db
+        return [c["label"].lower() for c in db.get_courses()]
+    except Exception:
+        return []
 
-# fallback keyword check if no course code found
-CLASS_KEYWORDS = {
-    "lecture", "lec", "lab", "tutorial", "tut",
-    "seminar", "class", "workshop", "recitation"
-}
 
-
-def is_class_event(event: dict) -> bool:
-    """Heuristic: does this calendar event look like a university class?"""
-    title = event.get("summary", "")
-    if COURSE_CODE_RE.search(title):          # course code found (e.g. CSC108)
-        return True
-    return any(kw in title.lower() for kw in CLASS_KEYWORDS)
+def is_class_event(event: dict) -> tuple[bool, str | None]:
+    """
+    Check if a calendar event matches a user-defined course.
+    Returns (is_match, matched_label | None).
+    No fallback keywords — only matches what the user explicitly added.
+    """
+    title  = event.get("summary", "").lower()
+    labels = _get_course_labels()
+    for label in labels:
+        if label in title:           # substring match, case-insensitive
+            return True, label
+    return False, None
 
 
 def get_course_name(event: dict) -> str:
     """
-    Extract a clean, filesystem-safe course name from an event title.
-    Prefers the course code (CSC108) over a slugified full title.
+    Return a clean, filesystem-safe course name.
+    Tries to match user-defined label first, falls back to slugifying the title.
     """
-    title = event.get("summary", "Untitled")
-    match = COURSE_CODE_RE.search(title)
-    if match:
-        return match.group(0).replace(" ", "").upper()   # e.g. "CSC108"
+    import db
+    title   = event.get("summary", "Untitled")
+    courses = db.get_courses()
+
+    # find the first matching course and use its display_name
+    for c in courses:
+        if c["label"].lower() in title.lower():
+            return re.sub(r'[^a-zA-Z0-9]', '_', c["display_name"]).strip('_')
+
+    # fallback: slugify the raw title (no keywords guessed)
     return re.sub(r'[^a-zA-Z0-9]', '_', title).strip('_')
 
 
 def get_upcoming_classes(days_ahead: int = 7) -> list:
-    """Return upcoming events that look like classes."""
-    return [e for e in get_upcoming_events(days_ahead) if is_class_event(e)]
+    """Return upcoming events that match a user-defined course."""
+    results = []
+    for e in get_upcoming_events(days_ahead):
+        matched, label = is_class_event(e)
+        if matched:
+            results.append({**e, "course": get_course_name(e), "matched_label": label})
+    return results
 
 
 def get_classes_starting_soon(window_minutes: int = 15) -> list:
@@ -60,7 +79,7 @@ def get_classes_starting_soon(window_minutes: int = 15) -> list:
         try:
             start_dt = datetime.fromisoformat(start_str.replace("Z", "+00:00"))
             if now <= start_dt <= cutoff:
-                upcoming.append({**e, "course": get_course_name(e)})
+                upcoming.append(e)   # course + matched_label already attached above
         except ValueError:
             continue
 

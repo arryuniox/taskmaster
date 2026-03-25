@@ -32,6 +32,9 @@ class PushCalRequest(BaseModel):
     task_id: int
     date: str  # YYYY-MM-DD
 
+class AddCourseRequest(BaseModel):
+    label:        str        # exactly how it appears in the GCal event title
+    display_name: str = ""   # optional nicer name shown in UI
 
 # ── routes ──────────────────────────────────────────────────────────
 @app.post("/api/extract")
@@ -129,6 +132,21 @@ def trigger_class_notes(window: int = 15):
     """
     created = gcal.trigger_class_notes(window_minutes=window)
     return {"triggered": len(created), "notes": created}
+
+@app.get("/api/courses")
+def list_courses():
+    return db.get_courses()
+
+
+@app.post("/api/courses")
+def add_course(req: AddCourseRequest):
+    return db.add_course(req.label, req.display_name)
+
+
+@app.delete("/api/courses/{course_id}")
+def remove_course(course_id: int):
+    db.delete_course(course_id)
+    return {"ok": True}
 
 # ── run ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
