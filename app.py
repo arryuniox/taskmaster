@@ -105,6 +105,30 @@ def agenda():
 
     return {"days": days, "agenda": agenda}
 
+@app.get("/api/gcal/classes")
+def gcal_classes():
+    """All upcoming calendar events that look like classes (next 7 days)."""
+    return gcal.get_upcoming_classes(days_ahead=7)
+
+
+@app.get("/api/gcal/classes/soon")
+def classes_starting_soon(window: int = 15):
+    """
+    Classes starting within the next `window` minutes.
+    Query param: ?window=15 (default)
+    Used by the frontend to decide when to prompt/auto-create a note.
+    """
+    return gcal.get_classes_starting_soon(window_minutes=window)
+
+
+@app.post("/api/gcal/classes/trigger-notes")
+def trigger_class_notes(window: int = 15):
+    """
+    Manually trigger note creation for classes starting soon.
+    Right now returns stubs — will create real .md files once notes.py exists (Subtask 1).
+    """
+    created = gcal.trigger_class_notes(window_minutes=window)
+    return {"triggered": len(created), "notes": created}
 
 # ── run ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
