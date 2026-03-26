@@ -122,6 +122,7 @@
     <div class="tabs">
       <div class="tab active" onclick="switchTab('dump')">Brain dump</div>
       <div class="tab" onclick="switchTab('agenda')">Agenda</div>
+      <div class="tab" onclick="switchTab('settings')">Settings</div>
     </div>
 
     <!-- dump tab -->
@@ -148,6 +149,32 @@
           <button class="btn btn-ghost" onclick="loadAgenda()">↻ Refresh</button>
         </div>
         <div id="agenda-content"><div class="empty">Loading agenda...</div></div>
+      </div>
+    </div>
+
+    <!-- settings tab -->
+     <div class="tab-panel" id="tab-settings">
+      <div class="detail-area">
+        <div class="detail-card" style="max-width:480px">
+          <h2 style="margin-bottom:4px">My Courses</h2>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+            Add the exact text that appears in your Google Calendar event titles.
+            Matching is case-insensitive. e.g. if your event says "CSC108 Lecture", add <code>CSC108</code>.
+          </p>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input id="course-label"
+              placeholder="GCal event text (e.g. CSC108)"
+              style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:7px;
+                    font-size:13px;background:var(--bg);color:var(--text);outline:none">
+            <input id="course-display"
+              placeholder="Display name (optional)"
+              style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:7px;
+                    font-size:13px;background:var(--bg);color:var(--text);outline:none">
+            <button class="btn btn-primary" onclick="addCourse()">Add</button>
+          </div>
+          <div id="course-list"></div>
+        </div>
       </div>
     </div>
   </main>
@@ -180,10 +207,15 @@ async function init(){
 }
 
 // ── tabs ─────────────────────────────────────────────────────────────
-function switchTab(name){
-  document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("active",["dump","agenda"][i]===name));
-  document.querySelectorAll(".tab-panel").forEach((p,i)=>p.classList.toggle("active",["tab-dump","tab-agenda"][i]==="tab-"+name));
-  if(name==="agenda") loadAgenda();
+function switchTab(name) {
+  const names  = ["dump", "agenda", "settings"];
+  const panels = ["tab-dump", "tab-agenda", "tab-settings"];
+  document.querySelectorAll(".tab").forEach((t, i) =>
+    t.classList.toggle("active", names[i] === name));
+  document.querySelectorAll(".tab-panel").forEach((p, i) =>
+    p.classList.toggle("active", panels[i] === "tab-" + name));
+  if (name === "agenda")   loadAgenda();
+  if (name === "settings") loadCourses();
 }
 
 // ── tasks ─────────────────────────────────────────────────────────────
@@ -360,6 +392,41 @@ async function pushToCal(id){
 function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;") }
 
 init();
+
+// ── settings ─────────────────────────────────────────────────────────
+async function loadCourses() {
+  const r = await fetch("/api/courses");
+  const courses = await r.json();
+  document.getElementById("course-list").innerHTML = courses.length
+    ? courses.map(c => `
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <span style="flex:1;font-size:13px;font-weight:500">${esc(c.display_name)}</span>
+          <code style="font-size:11px;color:var(--muted);background:var(--bg);
+                       padding:2px 6px;border-radius:4px">${esc(c.label)}</code>
+          <button class="btn btn-danger" style="padding:4px 10px;font-size:12px"
+            onclick="deleteCourse(${c.id})">✕</button>
+        </div>`).join("")
+    : `<div style="font-size:13px;color:var(--muted);padding:8px 0">No courses added yet.</div>`;
+}
+
+async function addCourse() {
+  const label   = document.getElementById("course-label").value.trim();
+  const display = document.getElementById("course-display").value.trim();
+  if (!label) return;
+  await fetch("/api/courses", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({label, display_name: display})
+  });
+  document.getElementById("course-label").value   = "";
+  document.getElementById("course-display").value = "";
+  loadCourses();
+}
+
+async function deleteCourse(id) {
+  await fetch(`/api/courses/${id}`, {method: "DELETE"});
+  loadCourses();
+}
 </script>
 </body>
 </html>

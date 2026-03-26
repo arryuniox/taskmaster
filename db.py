@@ -22,6 +22,14 @@ def init_db():
             created   TEXT DEFAULT (datetime('now'))
         )
     """)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS courses (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            label        TEXT NOT NULL UNIQUE,  -- exact string from Google Calendar event title
+            display_name TEXT,                  -- optional friendlier name shown in UI
+            created      TEXT DEFAULT (datetime('now'))
+        )
+    """)
     con.commit()
     con.close()
 
@@ -122,3 +130,30 @@ def cache_get(key: str) -> str | None:
     ).fetchone()
     con.close()
     return row[0] if row else None
+
+def add_course(label: str, display_name: str = "") -> dict:
+    """Add a course to match against. label = exactly how it appears in GCal."""
+    con = sqlite3.connect(DB_PATH)
+    cur = con.execute(
+        "INSERT OR IGNORE INTO courses (label, display_name) VALUES (?, ?)",
+        (label.strip(), display_name.strip() or label.strip())
+    )
+    con.commit()
+    row_id = cur.lastrowid
+    con.close()
+    return {"id": row_id, "label": label, "display_name": display_name or label}
+
+
+def get_courses() -> list:
+    con = sqlite3.connect(DB_PATH)
+    con.row_factory = sqlite3.Row
+    rows = con.execute("SELECT * FROM courses ORDER BY display_name").fetchall()
+    con.close()
+    return [dict(r) for r in rows]
+
+
+def delete_course(course_id: int):
+    con = sqlite3.connect(DB_PATH)
+    con.execute("DELETE FROM courses WHERE id = ?", (course_id,))
+    con.commit()
+    con.close()

@@ -32,6 +32,9 @@ class PushCalRequest(BaseModel):
     task_id: int
     date: str  # YYYY-MM-DD
 
+class AddCourseRequest(BaseModel):
+    label:        str        # exactly how it appears in the GCal event title
+    display_name: str = ""   # optional nicer name shown in UI
 
 # ── routes ──────────────────────────────────────────────────────────
 @app.post("/api/extract")
@@ -105,6 +108,45 @@ def agenda():
 
     return {"days": days, "agenda": agenda}
 
+@app.get("/api/gcal/classes")
+def gcal_classes():
+    """All upcoming calendar events that look like classes (next 7 days)."""
+    return gcal.get_upcoming_classes(days_ahead=7)
+
+
+@app.get("/api/gcal/classes/soon")
+def classes_starting_soon(window: int = 15):
+    """
+    Classes starting within the next `window` minutes.
+    Query param: ?window=15 (default)
+    Used by the frontend to decide when to prompt/auto-create a note.
+    """
+    return gcal.get_classes_starting_soon(window_minutes=window)
+
+
+@app.post("/api/gcal/classes/trigger-notes")
+def trigger_class_notes(window: int = 15):
+    """
+    Manually trigger note creation for classes starting soon.
+    Right now returns stubs — will create real .md files once notes.py exists (Subtask 1).
+    """
+    created = gcal.trigger_class_notes(window_minutes=window)
+    return {"triggered": len(created), "notes": created}
+
+@app.get("/api/courses")
+def list_courses():
+    return db.get_courses()
+
+
+@app.post("/api/courses")
+def add_course(req: AddCourseRequest):
+    return db.add_course(req.label, req.display_name)
+
+
+@app.delete("/api/courses/{course_id}")
+def remove_course(course_id: int):
+    db.delete_course(course_id)
+    return {"ok": True}
 
 # ── run ─────────────────────────────────────────────────────────────
 if __name__ == "__main__":
